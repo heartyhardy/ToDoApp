@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 //Post /todos
 app.post('/todos', (req, res)=>{
-    console.log("Request: ",req.body);
+    //console.log("Request: ",req.body);
     connectdb();
     var newtodo=ToDo({
         task:req.body.task,
@@ -34,6 +34,18 @@ app.post('/todos', (req, res)=>{
         res.status(400).send(err);
     })
 });
+
+// GET /todos
+
+app.get('/todos', (req, res)=>{
+    
+    connectdb();
+    ToDo.find().then((todos)=>{
+        res.send({todos});
+    }, (err)=>{
+        res.status(400).send(err);
+    })
+})
 
 app.listen(SERVER_PORT,()=>{
     console.log(`Server started on port: ${SERVER_PORT} `);
