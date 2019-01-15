@@ -15,6 +15,7 @@ app.use(bodyParser.json());
 app.post('/todos', (req, res)=>{
     //console.log("Request: ",req.body);
     connectdb();
+    
     var newtodo=ToDo({
         task:req.body.task,
         completed:req.body.completed,
@@ -38,7 +39,7 @@ app.post('/todos', (req, res)=>{
 // GET /todos
 
 app.get('/todos', (req, res)=>{
-    
+
     connectdb();
     ToDo.find().then((todos)=>{
         res.send({todos});
