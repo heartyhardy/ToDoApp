@@ -1,17 +1,21 @@
 const expect =  require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {ToDo} = require('../../models/todo');
 
 var seedToDos=[
     {
+        _id:new ObjectID(),
         task: "Learn Node"
     },
     {
+        _id:new ObjectID(),
         task: "Go Hiking"
     },
     {
+        _id:new ObjectID(),
         task: "Go Shopping"
     }
 ]
@@ -74,4 +78,41 @@ describe('Server - GET(ToDos)', ()=>{
         })
         .end(done);
     })
-})
+});
+
+describe('Server - Get(ToDos) By ID', ()=>{
+    it('Should fetch a valid document by ID',(done)=>{
+        request(app)
+        .get(`/todos/${seedToDos[0]._id.toHexString()}`)
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.task).toBe(seedToDos[0].task);
+        })
+        .end(done);
+    });
+
+
+    it('Should return a 400 if ID is in invalid format', (done)=>{
+        request(app)
+        .get('/todos/5c409171d21871157c839a1d22')
+        .expect(400)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        })
+        .end(done);
+    });
+
+
+    it('Should return a 404  if ID does not exist in the DB', (done)=>{
+
+        var fakeId=new ObjectID().toHexString();
+
+        request(app)
+        .get(`/todos/${fakeId}`)
+        .expect(404)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        })
+        .end(done);
+    });
+});
