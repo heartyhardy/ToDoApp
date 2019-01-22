@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const env="dev";
+const env="prod";
 const username="defaultuser";
 const password="def123321";
 const cloudconnectionstring= `mongodb://${username}:${password}@ds161104.mlab.com:61104/todoapp`;
