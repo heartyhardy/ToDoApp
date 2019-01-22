@@ -1,15 +1,33 @@
 const mongoose = require('mongoose');
 
-const env="prod";
+var env =  process.env.NODE_ENV || "development";
+
 const username="defaultuser";
 const password="def123321";
 const cloudconnectionstring= `mongodb://${username}:${password}@ds161104.mlab.com:61104/todoapp`;
 const localconnectionstring="mongodb://localhost:27017/ToDoApp";
-const connectionstring = (env!="dev")? cloudconnectionstring : localconnectionstring;
-const options = {useNewUrlParser:true}
+const localtestconnectionstring = "mongodb://localhost:27017/ToDoAppTest";
 
+
+switch(env)
+{
+    case "development":
+        connectionstring=localconnectionstring;
+        process.env.PORT=3000;
+        break;
+    case "testing":
+        connectionstring=localtestconnectionstring;
+        process.env.PORT=3000;
+        break;
+    case "production":
+        connectionstring=cloudconnectionstring;
+        break;
+}
+
+const options = {useNewUrlParser:true}
 mongoose.Promise=global.Promise;
 mongoose.set('useFindAndModify', false);
+
 mongoose.connect(connectionstring,options);
 
 var connectdb = () =>{

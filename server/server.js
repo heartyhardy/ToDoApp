@@ -8,7 +8,7 @@ var {connectdb} =require('../db/mongoose');
 var {ToDo} = require('../models/todo');
 var {User} = require('../models/user');
 
-var SERVER_PORT=process.env.PORT || 3000;
+var SERVER_PORT=process.env.PORT;
 
 var app = express();
 app.use(bodyParser.json());
