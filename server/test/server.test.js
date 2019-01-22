@@ -12,7 +12,9 @@ var seedToDos=[
     },
     {
         _id:new ObjectID(),
-        task: "Go Hiking"
+        task: "Go Hiking",
+        completed:true,
+        completedAt:23232
     },
     {
         _id:new ObjectID(),
@@ -162,5 +164,75 @@ describe('Server - DELETE(ToDos) By ID',()=>{
             expect(res.body).toMatchObject({});
         })
         .end((done));
+    });
+});
+
+describe('Server - PATCH (ToDos) By ID',()=>{
+    it('Should update the specified document',(done)=>{
+        var id=seedToDos[0]._id.toHexString();
+        var updatedTask = "Hit the Gym";
+        var body = {task:updatedTask, completed:true};
+
+        request(app)
+        .patch(`/todos/${id}`)
+        .send(body)
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo).toBeTruthy();
+            expect(res.body.todo.task).toBe(updatedTask);
+            expect(res.body.todo.completed).toBe(true);
+            expect(typeof res.body.todo.completedAt).toBe('number');
+        })
+        .end(done);
+    });
+
+    it('Should change completedAt to null when completed is false', (done)=>{
+        var id = seedToDos[1]._id.toHexString();
+        var updatedTask = "Hit the Gym";
+        var body = {task:updatedTask, completed:false};
+
+        request(app)
+        .patch(`/todos/${id}`)
+        .send(body)
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo).toBeTruthy();
+            expect(res.body.todo.task).toBe(updatedTask);
+            expect(res.body.todo.completed).toBe(false);
+            expect(res.body.todo.completedAt).not.toBeTruthy();
+        })
+        .end(done);
+    });
+
+    it('Should throw 400 if in invalid format', (done)=>{
+        var invalidId="5c46b672307aa01d14ed9a9511";
+        var updatedTask = "Hit the Gym";
+        var body = {task:updatedTask, completed:false};
+
+        request(app)
+        .patch(`/todos/${invalidId}`)
+        .send(body)
+        .expect(400)
+        .expect((res)=>{
+            expect(res.body.todo).toBeUndefined();
+            expect(res.body).toMatchObject({});
+        })
+        .end(done);
+    });
+
+    it('Should throw 404 if id is not found in db', (done)=>{
+        var fakeId=new ObjectID().toHexString();
+        var updatedTask = "Hit the Gym";
+        var body = {task:updatedTask, completed:false};
+
+        request(app)
+        .patch(`/todos/${fakeId}`)
+        .send(body)
+        .expect(404)
+        .expect((res)=>{
+            expect(res.body.todo).toBeUndefined();
+            expect(res.body).toMatchObject({});
+        })
+        .end(done);
     });
 });
