@@ -116,3 +116,51 @@ describe('Server - Get(ToDos) By ID', ()=>{
         .end(done);
     });
 });
+
+describe('Server - DELETE(ToDos) By ID',()=>{
+    it('Should return a valid deletion by Id', (done)=>{
+        var id=seedToDos[0]._id.toHexString();
+
+        request(app)
+        .delete(`/todos/${id}`)
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.deleted).toBeTruthy();
+            expect(res.body.deleted).toHaveProperty('_id',seedToDos[0]._id.toHexString());
+            expect(res.body.deleted).toHaveProperty('task', seedToDos[0].task.toString());
+        })
+        .end((err,res)=>{
+            if(err)
+                return done(err);
+
+            ToDo.findById(res.body.deleted._id).then((todo)=>{
+                expect(todo).not.toBeTruthy();
+                done();
+            }).catch(e=>done(e));
+        });
+    });
+
+    it('Should  throw 400 if Id is in invalid format', (done)=>{
+        var invalidId="5c46b672307aa01d14ed9a9511";
+        
+        request(app)
+        .delete(`/todos/${invalidId}`)
+        .expect(400)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        })
+        .end(done);
+    });
+
+    it('Should throw 404 if Id is not found in db', (done)=>{
+        var fakeId=new ObjectID().toHexString();
+
+        request(app)
+        .delete(`/todos/${fakeId}`)
+        .expect(404)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        })
+        .end((done));
+    });
+});

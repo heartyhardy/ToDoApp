@@ -77,7 +77,7 @@ app.delete('/todos/:id', (req, res)=>{
     
     ToDo.findByIdAndDelete(id).then((deleted)=>{
         if(deleted)
-            res.status(200).send(deleted);
+            res.status(200).send({deleted});
         else if(!deleted)
             res.status(404).send("Document could not be found!");
     })
