@@ -67,6 +67,25 @@ app.get('/todos/:id', (req, res)=>{
     });
 });
 
+// DELETE by ID /todos
+
+app.delete('/todos/:id', (req, res)=>{
+    var id=req.params.id;
+
+    if(!ObjectID.isValid(id))
+        return res.status(400).send("Invalid ID format!");
+    
+    ToDo.findByIdAndDelete(id).then((deleted)=>{
+        if(deleted)
+            res.status(200).send(deleted);
+        else if(!deleted)
+            res.status(404).send("Document could not be found!");
+    })
+    .catch((err)=>{
+        res.status(500).send("Error occured");
+    });
+});
+
 app.listen(SERVER_PORT,()=>{
     console.log(`Server started on port: ${SERVER_PORT} `);
 });
