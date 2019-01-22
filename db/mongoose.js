@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const env="dev";
+const env="prod";
 const username="defaultuser";
 const password="def123321";
 const cloudconnectionstring= `mongodb://${username}:${password}@ds161104.mlab.com:61104/todoapp`;
@@ -9,6 +9,7 @@ const connectionstring = (env!="dev")? cloudconnectionstring : localconnectionst
 const options = {useNewUrlParser:true}
 
 mongoose.Promise=global.Promise;
+mongoose.set('useFindAndModify', false);
 mongoose.connect(connectionstring,options);
 
 var connectdb = () =>{
