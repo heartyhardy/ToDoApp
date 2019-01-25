@@ -27,6 +27,7 @@ switch(env)
 const options = {useNewUrlParser:true}
 mongoose.Promise=global.Promise;
 mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
 
 mongoose.connect(connectionstring,options);
 

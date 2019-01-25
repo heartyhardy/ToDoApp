@@ -122,6 +122,23 @@ app.patch('/todos/:id',(req, res)=>{
     }).catch(e=>res.status(400).send(e));
 });
 
+// POST /users
+
+app.post('/users', (req, res)=>{
+    var body = _.pick(req.body, ['name', 'email', 'password']);
+
+    var newUser = new User(body);
+
+    newUser.save().then(()=>{
+        //res.status(200).send(doc);
+        return newUser.generateAuthToken();
+    })
+    .then((token)=>{
+        res.status(200).header('x-auth',token).send(newUser);
+    })
+    .catch(e=>res.status(400).send(e));
+})
+
 app.listen(SERVER_PORT,()=>{
     console.log(`Server started on port: ${SERVER_PORT} `);
 });
