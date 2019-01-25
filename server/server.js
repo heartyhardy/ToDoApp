@@ -7,6 +7,7 @@ var {mongoose} = require('../db/mongoose');
 var {connectdb} =require('../db/mongoose');
 var {ToDo} = require('../models/todo');
 var {User} = require('../models/user');
+var {authenticate} = require('./middleware/authenticate');
 
 var SERVER_PORT=process.env.PORT;
 
@@ -137,7 +138,16 @@ app.post('/users', (req, res)=>{
         res.status(200).header('x-auth',token).send(newUser);
     })
     .catch(e=>res.status(400).send(e));
-})
+});
+
+// GET /users/me
+
+app.get('/users/me', authenticate, (req, res)=>{
+    res.send(req.user);
+});
+
+
+// Host the express server on SERVER_PORT
 
 app.listen(SERVER_PORT,()=>{
     console.log(`Server started on port: ${SERVER_PORT} `);
