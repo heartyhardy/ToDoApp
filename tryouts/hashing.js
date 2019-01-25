@@ -1,5 +1,27 @@
 const {SHA256} = require('crypto-js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+var pass = '123321aa';
+
+// bcrypt.genSalt(15, (err,salt)=>{
+//     if(err)
+//         return console.log("Error occcured in GenSalt");
+
+//     bcrypt.hash(pass,salt, (err, hash)=>{
+//         if(err)
+//             return console.log("Error occured in Hash");
+//         console.log(hash);
+//     })
+// });
+
+ var hashedpass = "$2a$15$SnlbbCBuN7SCT2PYADp3xuo9njKKIvgYJnrM2RQrsPijjTvrtRu7O";
+
+bcrypt.compare(pass, hashedpass, (err, hash)=>{
+    if(err)
+        return console.log("Error occured in compare");
+    console.log(hash);
+});
 
 // ORIGINAL WAY
 
