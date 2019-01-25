@@ -88,11 +88,7 @@ UserSchema.pre('save', function(next) {
     if(user.isModified('password'))
     {
         bcrypt.genSalt(10, (err, salt)=>{
-            if(err)
-                return Promise.reject();
             bcrypt.hash(user.password,salt, (err, hash)=>{
-                if(err)
-                    return Promise.reject();
                 user.password=hash;
                 next();
             })

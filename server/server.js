@@ -14,10 +14,11 @@ var SERVER_PORT=process.env.PORT;
 var app = express();
 app.use(bodyParser.json());
 
+connectdb();
+
 //Post /todos
 app.post('/todos', (req, res)=>{
     //console.log("Request: ",req.body);
-    connectdb();
     
     var newtodo=ToDo({
         task:req.body.task,
@@ -28,10 +29,6 @@ app.post('/todos', (req, res)=>{
     newtodo.save().then((doc)=>{
         res.send(doc);
         console.log("Record saved successfully.");
-        return mongoose.disconnect();
-    })
-    .then((closing)=>{
-        console.log("Connection successfully closed.");
     })
     .catch((err)=>{
         console.log("Error occured: " + err);
@@ -43,7 +40,6 @@ app.post('/todos', (req, res)=>{
 
 app.get('/todos', (req, res)=>{
 
-    connectdb();
     ToDo.find().then((todos)=>{
         res.send({todos});
     }, (err)=>{
@@ -55,8 +51,6 @@ app.get('/todos', (req, res)=>{
 
 app.get('/todos/:id', (req, res)=>{
     var id = req.params.id;
-
-    connectdb();
 
     if(!ObjectID.isValid(id))
         return res.status(400).send("Invalid ID format!");
@@ -75,8 +69,6 @@ app.get('/todos/:id', (req, res)=>{
 
 app.delete('/todos/:id', (req, res)=>{
     var id=req.params.id;
-
-    connectdb();
 
     if(!ObjectID.isValid(id))
         return res.status(400).send("Invalid ID format!");
@@ -97,8 +89,6 @@ app.delete('/todos/:id', (req, res)=>{
 app.patch('/todos/:id',(req, res)=>{
     var id=req.params.id;
     var body = _.pick(req.body, ['task', 'completed']);
-
-    connectdb();
 
     if(!ObjectID.isValid(id))
         return res.status(400).send("Invalid ID format!");

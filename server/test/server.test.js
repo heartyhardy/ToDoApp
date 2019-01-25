@@ -4,30 +4,11 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {ToDo} = require('../../models/todo');
+const {User} =require('./../../models/user');
+const {seedToDos, seedUsers, populateTodos, populateUsers} = require('./seed/seed');
 
-var seedToDos=[
-    {
-        _id:new ObjectID(),
-        task: "Learn Node"
-    },
-    {
-        _id:new ObjectID(),
-        task: "Go Hiking",
-        completed:true,
-        completedAt:23232
-    },
-    {
-        _id:new ObjectID(),
-        task: "Go Shopping"
-    }
-]
-
-beforeEach((done)=>{
-    ToDo.deleteMany({})
-    .then(()=>{
-        return ToDo.insertMany(seedToDos);
-    }).then(()=>done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('Server - Post(ToDos)', ()=>{
     it('Should create new ToDo', (done)=>{
@@ -235,4 +216,98 @@ describe('Server - PATCH (ToDos) By ID',()=>{
         })
         .end(done);
     });
+});
+
+describe('Server - GET /users/me', ()=>{
+
+    it('Should return the authenticated user',()=>{
+        return request(app)
+        .get('/users/me')
+        .set('x-auth',seedUsers[0].tokens[0].token)
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body._id).toBe(seedUsers[0]._id.toHexString());
+            expect(res.body.name).toBe(seedUsers[0].name);
+            expect(res.body.email).toBe(seedUsers[0].email);
+        });
+    });
+
+    it('Should return a 401 Unauthorized error',()=>{
+        return request(app)
+        .get('/users/me')
+        .set('x-auth', null)
+        .expect(401)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        });
+    });
+});
+
+describe('Server - POST /users',()=>{
+
+    it('Should create a new user with a token', ()=>{
+
+        var name ="Chubu kuboni";
+        var email = "chubutobilay@gmail.com";
+        var password ="tobi123321";
+
+        return request(app)
+        .post('/users')
+        .send({name, email, password})
+        .expect(200)
+        .expect((res)=>{
+            expect(res.headers['x-auth']).toBeTruthy();
+            expect(res.body._id).toBeTruthy();
+            expect(res.body.name).toBe(name);
+            expect(res.body.email).toBe(email);
+        })
+        .expect((res)=>{
+            User.findOne({email}).then((user)=>{
+                expect(user).toBeTruthy();
+                expect(user.password).not.toBe(password);
+                expect(user.name).toBe(name);
+                expect(user.email).toBe(email);
+            });
+        });
+    });
+
+    it('Should throw an error if email/password validation violated', ()=>{
+        var name ="B";
+        var email = 'invalidmail';
+        var password ="bin";
+
+        return request(app)
+        .post('/users')
+        .send({name, email, password})
+        .expect(400)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        })
+        .expect((res)=>{
+            User.find({email}).then((users)=>{
+                expect(users.length).toBe(0);
+            });
+        });
+    });
+
+    it('Should throw an error if email is not unique',()=>{
+
+        var name ="Bin Ladeen";
+        var email = seedUsers[0].email;
+        var password ="bin123321";
+
+        return request(app)
+        .post('/users')
+        .send({name, email, password})
+        .expect(400)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        })
+        .expect((res)=>{
+            User.find({email}).then((users)=>{
+                expect(users.length).toBe(1);
+            });
+        });
+    });
+
 });
