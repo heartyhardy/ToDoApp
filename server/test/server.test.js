@@ -16,6 +16,7 @@ describe('Server - Post(ToDos)', ()=>{
 
         request(app)
         .post('/todos')
+        .set('x-auth', seedUsers[0].tokens[0].token)
         .send({task})
         .expect(200)
         .expect((res)=>{
@@ -36,6 +37,7 @@ describe('Server - Post(ToDos)', ()=>{
 
         request(app)
         .post('/todos')
+        .set('x-auth', seedUsers[0].tokens[0].token)
         .send({task})
         .expect(400)
         .expect((res)=>{
@@ -54,9 +56,10 @@ describe('Server - GET(ToDos)', ()=>{
     it('Should fetch all the documents in ToDos', (done)=>{
         request(app)
         .get('/todos')
+        .set('x-auth', seedUsers[0].tokens[0].token)
         .expect(200)
         .expect((res)=>{
-            expect(res.body.todos.length).toBe(3);
+            expect(res.body.todos.length).toBe(2);
             expect(res.body.todos[0].task).toBe("Learn Node");
         })
         .end(done);
@@ -67,6 +70,7 @@ describe('Server - Get(ToDos) By ID', ()=>{
     it('Should fetch a valid document by ID',(done)=>{
         request(app)
         .get(`/todos/${seedToDos[0]._id.toHexString()}`)
+        .set('x-auth', seedUsers[0].tokens[0].token)
         .expect(200)
         .expect((res)=>{
             expect(res.body.task).toBe(seedToDos[0].task);
@@ -78,6 +82,7 @@ describe('Server - Get(ToDos) By ID', ()=>{
     it('Should return a 400 if ID is in invalid format', (done)=>{
         request(app)
         .get('/todos/5c409171d21871157c839a1d22')
+        .set('x-auth', seedUsers[0].tokens[0].token)
         .expect(400)
         .expect((res)=>{
             expect(res.body).toMatchObject({});
@@ -92,6 +97,7 @@ describe('Server - Get(ToDos) By ID', ()=>{
 
         request(app)
         .get(`/todos/${fakeId}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .expect(404)
         .expect((res)=>{
             expect(res.body).toMatchObject({});
@@ -106,17 +112,18 @@ describe('Server - DELETE(ToDos) By ID',()=>{
 
         request(app)
         .delete(`/todos/${id}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .expect(200)
         .expect((res)=>{
             expect(res.body.deleted).toBeTruthy();
-            expect(res.body.deleted).toHaveProperty('_id',seedToDos[0]._id.toHexString());
-            expect(res.body.deleted).toHaveProperty('task', seedToDos[0].task.toString());
+            expect(res.body.deleted).toHaveProperty('n',1);
+            expect(res.body.deleted).toHaveProperty('ok', 1);
         })
         .end((err,res)=>{
             if(err)
                 return done(err);
 
-            ToDo.findById(res.body.deleted._id).then((todo)=>{
+            ToDo.findById({_id:id}).then((todo)=>{
                 expect(todo).not.toBeTruthy();
                 done();
             }).catch(e=>done(e));
@@ -128,6 +135,7 @@ describe('Server - DELETE(ToDos) By ID',()=>{
         
         request(app)
         .delete(`/todos/${invalidId}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .expect(400)
         .expect((res)=>{
             expect(res.body).toMatchObject({});
@@ -140,6 +148,20 @@ describe('Server - DELETE(ToDos) By ID',()=>{
 
         request(app)
         .delete(`/todos/${fakeId}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
+        .expect(404)
+        .expect((res)=>{
+            expect(res.body).toMatchObject({});
+        })
+        .end((done));
+    });
+
+    it('Should throw 404 if Id belongs to other user', (done)=>{
+        var fakeId=seedToDos[1]._id.toHexString();
+
+        request(app)
+        .delete(`/todos/${fakeId}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .expect(404)
         .expect((res)=>{
             expect(res.body).toMatchObject({});
@@ -156,6 +178,7 @@ describe('Server - PATCH (ToDos) By ID',()=>{
 
         request(app)
         .patch(`/todos/${id}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .send(body)
         .expect(200)
         .expect((res)=>{
@@ -168,12 +191,13 @@ describe('Server - PATCH (ToDos) By ID',()=>{
     });
 
     it('Should change completedAt to null when completed is false', (done)=>{
-        var id = seedToDos[1]._id.toHexString();
+        var id = seedToDos[0]._id.toHexString();
         var updatedTask = "Hit the Gym";
         var body = {task:updatedTask, completed:false};
 
         request(app)
         .patch(`/todos/${id}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .send(body)
         .expect(200)
         .expect((res)=>{
@@ -192,6 +216,7 @@ describe('Server - PATCH (ToDos) By ID',()=>{
 
         request(app)
         .patch(`/todos/${invalidId}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .send(body)
         .expect(400)
         .expect((res)=>{
@@ -208,6 +233,7 @@ describe('Server - PATCH (ToDos) By ID',()=>{
 
         request(app)
         .patch(`/todos/${fakeId}`)
+        .set('x-auth',seedUsers[0].tokens[0].token)
         .send(body)
         .expect(404)
         .expect((res)=>{
@@ -336,7 +362,7 @@ describe('Server - Users(Login)', ()=>{
 
     it('Should not return a valid user with x-auth token with invalid credentials', ()=>{
         var email=seedUsers[1].email;
-        var password=seedUsers[1].password;
+        var password=seedUsers[1].password+"wrongpass";
 
         return request(app)
         .post('/users/login')
@@ -348,7 +374,7 @@ describe('Server - Users(Login)', ()=>{
         })
         .expect((res)=>{
             User.findById({_id:seedUsers[1]._id}).then((user)=>{
-                expect(user.tokens.length).toBe(0);
+                expect(user.tokens.length).toBe(1);
             });
         });
     });

@@ -17,10 +17,11 @@ app.use(bodyParser.json());
 connectdb();
 
 //Post /todos
-app.post('/todos', (req, res)=>{
+app.post('/todos', authenticate,(req, res)=>{
     //console.log("Request: ",req.body);
     
-    var newtodo=ToDo({
+    var newtodo=new ToDo({
+        _creator:req.user._id,
         task:req.body.task,
         completed:req.body.completed,
         completedAt:req.body.completedAt
@@ -33,14 +34,14 @@ app.post('/todos', (req, res)=>{
     .catch((err)=>{
         console.log("Error occured: " + err);
         res.status(400).send(err);
-    })
+    });
 });
 
 // GET /todos
 
-app.get('/todos', (req, res)=>{
+app.get('/todos',authenticate, (req, res)=>{
 
-    ToDo.find().then((todos)=>{
+    ToDo.find({_creator:req.user._id}).then((todos)=>{
         res.send({todos});
     }, (err)=>{
         res.status(400).send(err);
@@ -49,13 +50,13 @@ app.get('/todos', (req, res)=>{
 
 // GET by ID /todos
 
-app.get('/todos/:id', (req, res)=>{
+app.get('/todos/:id', authenticate, (req, res)=>{
     var id = req.params.id;
 
     if(!ObjectID.isValid(id))
         return res.status(400).send("Invalid ID format!");
     
-    ToDo.findById(id).then((todo)=>{
+    ToDo.findOne({_id:id, _creator:req.user._id}).then((todo)=>{
         if(!todo)
             return res.status(404).send("ID not found in the Database!");
 
@@ -67,16 +68,16 @@ app.get('/todos/:id', (req, res)=>{
 
 // DELETE by ID /todos
 
-app.delete('/todos/:id', (req, res)=>{
+app.delete('/todos/:id', authenticate, (req, res)=>{
     var id=req.params.id;
 
     if(!ObjectID.isValid(id))
         return res.status(400).send("Invalid ID format!");
     
-    ToDo.findByIdAndDelete(id).then((deleted)=>{
-        if(deleted)
+    ToDo.deleteOne({_id:id, _creator:req.user._id}).then((deleted)=>{
+        if(deleted.n==1)
             res.status(200).send({deleted});
-        else if(!deleted)
+        else if(deleted.n==0)
             res.status(404).send("Document could not be found!");
     })
     .catch((err)=>{
@@ -86,7 +87,7 @@ app.delete('/todos/:id', (req, res)=>{
 
 // PATCH by Id /todos
 
-app.patch('/todos/:id',(req, res)=>{
+app.patch('/todos/:id', authenticate, (req, res)=>{
     var id=req.params.id;
     var body = _.pick(req.body, ['task', 'completed']);
 
@@ -103,7 +104,7 @@ app.patch('/todos/:id',(req, res)=>{
         body.completedAt=null;
     }
 
-    ToDo.findOneAndUpdate({_id:id}, {$set:body}, {new:true}).then((todo)=>{
+    ToDo.findOneAndUpdate({_id:id, _creator:req.user._id}, {$set:body}, {new:true}).then((todo)=>{
 
         if(!todo)
             return res.status(404).send("Document does not exist in db!");

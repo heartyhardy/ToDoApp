@@ -4,25 +4,28 @@ const jwt = require('jsonwebtoken');
 const {ToDo} = require('./../../../models/todo');
 const {User} = require('./../../../models/user');
 
+const firstUserId=new ObjectID();
+const secUserId=new ObjectID();
+
 const seedToDos=[
     {
         _id:new ObjectID(),
+        _creator:firstUserId,
         task: "Learn Node"
     },
     {
         _id:new ObjectID(),
+        _creator:secUserId,
         task: "Go Hiking",
         completed:true,
         completedAt:23232
     },
     {
         _id:new ObjectID(),
+        _creator:firstUserId,
         task: "Go Shopping"
     }
 ];
-
-const firstUserId=new ObjectID();
-const secUserId=new ObjectID();
 
 const seedUsers = [
     {
@@ -39,7 +42,11 @@ const seedUsers = [
         _id:secUserId,
         name: 'adolf hitler',
         email: 'herrhitler@gmail.com',
-        password: 'juden123'
+        password: 'juden123',
+        tokens:[{
+            access:'auth',
+            token: jwt.sign({_id:secUserId, auth:'auth'},'hash_salted').toString()
+        }]
     }
 ];
 
