@@ -147,6 +147,15 @@ app.post('/users/login', (req, res)=>{
     }).catch(e=>res.status(400).send());
 });
 
+// DELETE /users/me/token
+
+app.delete('/users/me/token', authenticate, (req,res)=>{
+    req.user.removeToken(req.token).then((result)=>{
+        res.status(200).send();
+    })
+    .catch(e=>res.status(400).send());
+});
+
 // Host the express server on SERVER_PORT
 
 app.listen(SERVER_PORT,()=>{
