@@ -311,3 +311,46 @@ describe('Server - POST /users',()=>{
     });
 
 });
+
+describe('Server - Users(Login)', ()=>{
+    
+    it('Should return the user with x-auth token with valid credentials', ()=>{
+        var email = seedUsers[0].email;
+        var password = seedUsers[0].password;
+
+        return request(app)
+        .post('/users/login')
+        .send({email, password})
+        .expect(200)
+        .expect((res)=>{
+            expect(res.headers['x-auth']).toBeTruthy();
+            expect(res.body.email).toBe(email);
+        })
+        .expect((res)=>{
+            User.findById({_id:seedUsers[0]._id}).then((user)=>{
+                expect(user.tokens[1]).toHaveProperty('access','auth');
+                expect(user.tokens[1]).toHaveProperty('token', res.headers['x-auth']);
+            });
+        });
+    });
+
+    it('Should not return a valid user with x-auth token with invalid credentials', ()=>{
+        var email=seedUsers[1].email;
+        var password=seedUsers[1].password;
+
+        return request(app)
+        .post('/users/login')
+        .send({email,password})
+        .expect(400)
+        .expect((res)=>{
+            expect(res.headers['x-auth']).not.toBeTruthy();
+            expect(res.body).toMatchObject({});
+        })
+        .expect((res)=>{
+            User.findById({_id:seedUsers[1]._id}).then((user)=>{
+                expect(user.tokens.length).toBe(0);
+            });
+        });
+    });
+
+});
