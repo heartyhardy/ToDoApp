@@ -136,6 +136,16 @@ app.get('/users/me', authenticate, (req, res)=>{
     res.send(req.user);
 });
 
+// POST /users/login
+
+app.post('/users/login', (req, res)=>{
+    var body = _.pick(req.body, ['email', 'password']);
+    User.findByEmailPass(body.email, body.password).then((user)=>{
+        return user.generateAuthToken().then((token)=>{
+            res.status(200).header('x-auth',token).send(user);
+        });
+    }).catch(e=>res.status(400).send());
+});
 
 // Host the express server on SERVER_PORT
 
