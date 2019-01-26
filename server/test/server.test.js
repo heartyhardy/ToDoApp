@@ -354,3 +354,34 @@ describe('Server - Users(Login)', ()=>{
     });
 
 });
+
+describe("Server - Delete User Tokens",()=>{
+    
+    it('Should delete the specified token', ()=>{
+        var token = seedUsers[0].tokens[0].token;
+
+        return request(app)
+        .delete('/users/me/token')
+        .set('x-auth',token)
+        .expect(200)
+        .expect((res)=>{
+            User.findOne({_id:seedUsers[0]._id}).then((user)=>{
+                expect(user.tokens.length).toBe(0);
+            });
+        });
+    });
+
+    it('Should return 401 if token is invalid', ()=>{
+        var token="invalidtoken";
+
+        return request(app)
+        .delete('/users/me/token')
+        .set('x-auth',token)
+        .expect(401)
+        .expect((res)=>{
+            User.findOne({_id:seedUsers[1]._id}).then((user)=>{
+                expect(user.tokens).toMatchObject({});
+            });
+        });
+    });
+});
